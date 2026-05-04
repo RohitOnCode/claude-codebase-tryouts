@@ -5,6 +5,7 @@ import { TaskService } from '../../core/services/task.service';
 import { BugService } from '../../core/services/bug.service';
 import { TeamService } from '../../core/services/team.service';
 import { KpiCard } from './kpi-card/kpi-card';
+import { ProjectVelocityWidget } from './project-velocity-widget/project-velocity-widget';
 
 const PRIORITY_COLORS: Record<string, string> = {
   critical: 'bg-red-100 text-red-700',
@@ -29,7 +30,7 @@ const BUG_SEV_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [KpiCard, RouterLink],
+  imports: [KpiCard, RouterLink, ProjectVelocityWidget],
   template: `
     <div class="p-8">
       <div class="mb-8">
@@ -90,6 +91,11 @@ const BUG_SEV_COLORS: Record<string, string> = {
             }
           </ul>
         </div>
+      </div>
+
+      <!-- Velocity Widget -->
+      <div class="mb-6">
+        <app-project-velocity-widget />
       </div>
 
       <!-- Project Status Overview -->
