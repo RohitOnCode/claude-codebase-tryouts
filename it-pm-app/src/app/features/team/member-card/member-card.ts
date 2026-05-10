@@ -14,34 +14,8 @@ const ROLE_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-member-card',
-  template: `
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col">
-      <div class="flex items-center gap-4 mb-4">
-        <img [src]="member().avatarUrl" class="w-14 h-14 rounded-full border-2 border-gray-200" [alt]="member().name" />
-        <div class="flex-1 min-w-0">
-          <h3 class="font-semibold text-gray-900 truncate">{{ member().name }}</h3>
-          <span [class]="'text-xs px-2 py-0.5 rounded-full font-medium ' + roleColors[member().role]">{{ member().role }}</span>
-          <p class="text-xs text-gray-400 mt-1 truncate">{{ member().email }}</p>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <p class="text-xs text-gray-500 font-medium mb-1.5">Skills</p>
-        <div class="flex flex-wrap gap-1.5">
-          @for (skill of member().skills.slice(0, 4); track skill) {
-            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md">{{ skill }}</span>
-          }
-        </div>
-      </div>
-
-      <div class="mt-auto pt-3 border-t border-gray-50 flex items-center justify-between">
-        <div class="text-xs text-gray-400">Joined {{ member().joinedDate }}</div>
-        <div class="flex items-center gap-1 text-xs text-gray-500">
-          <span class="font-semibold text-gray-700">{{ activeProjectCount() }}</span> projects
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './member-card.html',
+  styleUrl: './member-card.css'
 })
 export class MemberCard {
   member = input.required<TeamMember>();

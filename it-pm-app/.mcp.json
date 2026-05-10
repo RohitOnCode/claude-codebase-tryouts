@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase",
+        "--project-ref",
+        "fufvrwnfpimksdwpwkdi",
+        "--access-token",
+        "YOUR_SUPABASE_ACCESS_TOKEN"
+      ]
+    },
+    "workload-balancer": {
+      "command": "node",
+      "args": [
+        "/Users/rohit/Documents/code/claude-codebase-tryouts/mcp-tryouts/mcp-workload-balancer/dist/index.js"
+      ]
+    }
+  }
+}
