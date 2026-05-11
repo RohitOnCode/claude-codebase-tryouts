@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/format-on-edit.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/typecheck-on-edit.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/test-on-spec-edit.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/stop-summary.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
