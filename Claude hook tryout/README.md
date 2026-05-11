@@ -1,200 +1,132 @@
-# Angular Hooks Library
+# Claude Hook Tryout
 
-A collection of **functional composables** for Angular 17+ using the latest Signals API.
-These are inspired by the React hooks pattern, adapted for Angular's DI and reactivity model.
+Reusable **Claude Code hooks** for Angular projects.
 
-Copy any hook file into your project's `src/app/core/hooks/` folder and import directly.
+Claude Code hooks are shell scripts that Claude Code runs **automatically** during
+your session — no manual commands needed. They fire on events like "after Claude
+edits a file" or "when Claude finishes a response".
 
 ---
 
-## The Hook Pattern
+## What's inside
 
-Angular hooks are plain **functions** that:
-- Use `inject()` internally to access DI (no constructor needed)
-- Return reactive **signals** (`signal`, `computed`)
-- Clean up after themselves via `DestroyRef`
-- Must be called inside a component/directive **constructor** or class **field initializer**
-
-```typescript
-// Calling a hook inside a component
-@Component({ ... })
-export class TaskBoardComponent {
-  private tasks = inject(TaskService).tasks;
-
-  // Hooks are called here — at field-initialization time
-  search = signal('');
-  debouncedSearch = useDebounce(this.search, 400);
-  sort = useSort(this.tasks);
-  pagination = usePagination(this.sort.sortedItems, 10);
-}
+```
+angular-project-template/
+  .claude/
+    settings.json       ← hook wiring (copy this to your Angular project)
+    hooks/
+      format-on-edit.sh       ← Hook 1
+      typecheck-on-edit.sh    ← Hook 2
+      test-on-spec-edit.sh    ← Hook 3
+      stop-summary.sh         ← Hook 4
 ```
 
 ---
 
-## Available Hooks
+## The 4 Hooks
 
-### `useDebounce(source, delayMs?)`
-Delays propagating a signal's value until the user stops changing it.
+### Hook 1 — `format-on-edit.sh`
+**Trigger:** Every time Claude writes or edits a `.ts`, `.html`, `.css`, or `.scss` file  
+**What it does:** Runs Prettier automatically — you never get an unformatted file  
+**Requires:** `prettier` in `devDependencies`
 
-```typescript
-const search = signal('');
-const debouncedSearch = useDebounce(search, 400);
-// use debouncedSearch() in a computed() to filter lists
 ```
-**IT PM app use cases:** search bar in Projects list, Task board, Bug tracker.
-
----
-
-### `usePagination(items, pageSize?)`
-Full pagination state over any array signal — page controls, sliced data, page numbers.
-
-```typescript
-const pagination = usePagination(tasks, 10);
-// Template
-// *ngFor="let task of pagination.paginatedItems()"
-// (click)="pagination.goToPage(3)"
-// (click)="pagination.nextPage()"
-```
-**IT PM app use cases:** Projects list, Team list, Bug tracker table.
-
----
-
-### `useLocalStorage(key, defaultValue)`
-Persists a signal to `localStorage`. Rehydrates automatically. SSR-safe.
-
-```typescript
-const sidebarOpen = useLocalStorage('sidebar-open', true);
-const theme = useLocalStorage<'light' | 'dark'>('theme', 'light');
-sidebarOpen.set(false); // automatically saved
-```
-**IT PM app use cases:** sidebar collapsed state, active theme, last-viewed project ID.
-
----
-
-### `useMediaQuery(query)` + breakpoint helpers
-Tracks a CSS media query, returning a boolean signal that updates on resize.
-
-```typescript
-const isMobile = useIsMobile();     // < 640px
-const isDesktop = useIsLg();        // ≥ 1024px
-// Template: @if (!isMobile()) { <sidebar /> }
-```
-**IT PM app use cases:** responsive sidebar, mobile task card layout, column count.
-
----
-
-### `useLoading<T>()`
-Manages `loading / success / error` state for any async operation.
-
-```typescript
-const loader = useLoading<Project[]>();
-await loader.run(() => fetch('/api/projects').then(r => r.json()));
-// Template:
-// @if (loader.isLoading()) { <spinner /> }
-// @if (loader.isError())   { {{ loader.error() }} }
-// @for (p of loader.data()) { <project-card [project]="p" /> }
-```
-**IT PM app use cases:** wrap any future HTTP service call in services.
-
----
-
-### `useSort(items)`
-Adds sortable state; clicking the same column cycles `asc → desc → none`.
-
-```typescript
-const sort = useSort(tasks);
-sort.sortBy('priority');
-// Template:
-// *ngFor="let t of sort.sortedItems()"
-// (click)="sort.sortBy('title')"
-// [class.active]="sort.sortKey() === 'title'"
-```
-**IT PM app use cases:** Bug tracker table, Team list, Project list sorting.
-
----
-
-### `useFilter(items, predicate)`
-Multi-key filter with active filter count badge.
-
-```typescript
-interface TaskFilters { status: TaskStatus; priority: Priority }
-
-const filter = useFilter(tasks, (task, f) =>
-  (!f.status   || task.status   === f.status) &&
-  (!f.priority || task.priority === f.priority)
-);
-filter.setFilter('status', 'in-progress');
-filter.clearAllFilters();
-// Template: {{ filter.activeFilterCount() }} active filters
-```
-**IT PM app use cases:** Task board filters, Bug severity filter, Project status filter.
-
----
-
-### `useCountdown(targetDate)`
-Live countdown to a date, updating every second. Perfect for sprint timers.
-
-```typescript
-const sprintEnd = useCountdown(new Date(sprint.endDate));
-// Template: {{ sprintEnd.formatted() }}  →  "4d 12h 30m 05s"
-// @if (sprintEnd.isExpired()) { Sprint has ended! }
-```
-**IT PM app use cases:** Active sprint countdown widget on the Dashboard.
-
----
-
-### `useClipboard(resetMs?)`
-Copies text, shows a brief "copied!" state for `resetMs` ms (default 2s).
-
-```typescript
-const clipboard = useClipboard();
-// Template:
-// (click)="clipboard.copy(task.id)"
-// [class.text-green-500]="clipboard.copied()"
-// {{ clipboard.copied() ? 'Copied!' : 'Copy ID' }}
-```
-**IT PM app use cases:** Copy task/bug ID, copy repository URL in Project Detail.
-
----
-
-### `useIntersectionObserver(options?)`
-Returns true when the host element enters the viewport. Calls `inject(ElementRef)` automatically.
-
-```typescript
-@Component({ ... })
-export class ProjectVelocityWidget {
-  isVisible = useIntersectionObserver({ threshold: 0.3 });
-  // Template: @if (isVisible()) { <chart /> }
-}
-```
-**IT PM app use cases:** Lazy-render chart widgets on Dashboard, animate cards on scroll.
-
----
-
-## Composing Hooks
-
-Hooks compose naturally — pass the output of one as input to another:
-
-```typescript
-export class BugTrackerComponent {
-  private bugs = inject(BugService).bugs;
-
-  search = signal('');
-  debouncedSearch = useDebounce(this.search, 300);
-
-  filtered = useFilter(this.bugs, (bug, f) =>
-    (!f.search || bug.title.toLowerCase().includes(f.search.toLowerCase()))
-  );
-
-  sorted = useSort(this.filtered.filteredItems);
-  paginated = usePagination(this.sorted.sortedItems, 15);
-}
+Claude edits task-board.ts
+  → prettier --write task-board.ts
+  → ✔ Formatted: task-board.ts
 ```
 
 ---
 
-## Installation
+### Hook 2 — `typecheck-on-edit.sh`
+**Trigger:** Every time Claude writes or edits a `.ts` file (non-spec)  
+**What it does:** Runs `tsc --noEmit` and prints any type errors back to Claude  
+**Why it matters:** Claude sees the errors in the same turn and fixes them immediately
 
-1. Copy the `hooks/` folder into `src/app/core/hooks/`
-2. Import from the barrel: `import { useDebounce, usePagination } from '../core/hooks'`
-3. No additional packages required — only `@angular/core` APIs are used
+```
+Claude edits project.service.ts (introduces a type error)
+  → tsc --noEmit
+  → src/app/core/services/project.service.ts:24:5
+    Type 'string' is not assignable to type 'number'.
+  → Claude reads this and fixes it before you even notice
+```
+
+---
+
+### Hook 3 — `test-on-spec-edit.sh`
+**Trigger:** Every time Claude writes or edits a `*.spec.ts` file  
+**What it does:** Runs Vitest on that specific spec file immediately  
+**Why it matters:** Enables a tight TDD loop — write test → Claude sees failure → Claude fixes code
+
+```
+Claude edits project.service.spec.ts
+  → vitest run project.service.spec.ts
+  → ✖ 1 test failed: should return project by id
+  → Claude fixes the service and the test passes
+```
+
+---
+
+### Hook 4 — `stop-summary.sh`
+**Trigger:** When Claude finishes responding (the "Stop" event)  
+**What it does:** Prints an Angular health check to your terminal every time Claude stops  
+**Output:** TypeScript error count + Prettier formatting status
+
+```
+╔══════════════════════════════════════╗
+║      Angular Project Health Check   ║
+╚══════════════════════════════════════╝
+
+▸ TypeScript
+  ✔ 0 type errors
+
+▸ Prettier
+  ✔ All files formatted
+```
+
+---
+
+## How hooks work in Claude Code
+
+```
+You ask Claude to add a feature
+         ↓
+Claude calls Write tool (edits dashboard.ts)
+         ↓
+[PostToolUse fires]
+  → format-on-edit.sh   → formats the file
+  → typecheck-on-edit.sh → finds 1 type error, prints it
+         ↓
+Claude sees the error output, fixes it in the next tool call
+         ↓
+Claude finishes responding
+         ↓
+[Stop fires]
+  → stop-summary.sh → prints health check to your terminal
+```
+
+---
+
+## How to use in any Angular project
+
+1. **Copy the template into your project:**
+   ```bash
+   cp -r "angular-project-template/.claude" your-angular-app/
+   ```
+
+2. **Make scripts executable:**
+   ```bash
+   chmod +x your-angular-app/.claude/hooks/*.sh
+   ```
+
+3. **Open the project in Claude Code** — hooks activate automatically.
+
+> The hooks auto-detect your project root by walking up the directory tree
+> looking for `package.json` or `tsconfig.json`, so they work even when Claude
+> edits deeply nested files.
+
+---
+
+## Already applied to
+
+- `it-pm-app/` — hooks are live in `.claude/settings.json` + `.claude/hooks/`
