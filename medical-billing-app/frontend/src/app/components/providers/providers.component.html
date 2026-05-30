@@ -1,0 +1,231 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <p class="text-sm text-gray-500">Manage medical and insurance providers</p>
+    <button *ngIf="activeTab === 'providers'" (click)="openProviderModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Provider
+    </button>
+    <button *ngIf="activeTab === 'insurance'" (click)="openInsuranceModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Add Insurance
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+    <button (click)="activeTab='providers'"
+            [class]="activeTab === 'providers' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+            class="px-4 py-2 text-sm font-medium rounded-md transition-all">
+      Medical Providers
+    </button>
+    <button (click)="activeTab='insurance'"
+            [class]="activeTab === 'insurance' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'"
+            class="px-4 py-2 text-sm font-medium rounded-md transition-all">
+      Insurance Payers
+    </button>
+  </div>
+
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Providers Table -->
+  <div *ngIf="!loading && activeTab === 'providers'" class="card p-0 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="table-header">Provider</th>
+          <th class="table-header">Specialty</th>
+          <th class="table-header">NPI</th>
+          <th class="table-header">Contact</th>
+          <th class="table-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <tr *ngFor="let p of providers" class="hover:bg-gray-50 transition-colors">
+          <td class="table-cell">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                <span class="text-green-700 font-semibold text-sm">
+                  {{ p.firstName[0] }}{{ p.lastName[0] }}
+                </span>
+              </div>
+              <div>
+                <p class="font-medium text-gray-900">{{ p.firstName }} {{ p.lastName }}</p>
+                <p class="text-xs text-gray-500">{{ p.email }}</p>
+              </div>
+            </div>
+          </td>
+          <td class="table-cell">
+            <span class="badge badge-blue">{{ p.specialty || 'General' }}</span>
+          </td>
+          <td class="table-cell">
+            <span class="font-mono text-xs text-gray-600">{{ p.npi || 'N/A' }}</span>
+          </td>
+          <td class="table-cell text-gray-600">{{ p.phone }}</td>
+          <td class="table-cell">
+            <div class="flex items-center gap-2">
+              <button (click)="openProviderModal(p)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button (click)="deleteProvider(p.id!)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="providers.length === 0">
+          <td colspan="5" class="px-6 py-12 text-center text-gray-400">No providers found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Insurance Table -->
+  <div *ngIf="!loading && activeTab === 'insurance'" class="card p-0 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="table-header">Insurance Provider</th>
+          <th class="table-header">Payer ID</th>
+          <th class="table-header">Phone</th>
+          <th class="table-header">Email</th>
+          <th class="table-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <tr *ngFor="let ins of insuranceProviders" class="hover:bg-gray-50 transition-colors">
+          <td class="table-cell font-medium text-gray-900">{{ ins.name }}</td>
+          <td class="table-cell">
+            <span class="font-mono text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">{{ ins.payerId }}</span>
+          </td>
+          <td class="table-cell text-gray-600">{{ ins.phone }}</td>
+          <td class="table-cell text-gray-600">{{ ins.email }}</td>
+          <td class="table-cell">
+            <div class="flex items-center gap-2">
+              <button (click)="openInsuranceModal(ins)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button (click)="deleteInsurance(ins.id!)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="insuranceProviders.length === 0">
+          <td colspan="5" class="px-6 py-12 text-center text-gray-400">No insurance providers found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Provider Modal -->
+<div *ngIf="showProviderModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 class="text-lg font-semibold text-gray-800">{{ editingProvider ? 'Edit Provider' : 'Add Provider' }}</h3>
+      <button (click)="showProviderModal=false" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">First Name *</label>
+          <input type="text" [(ngModel)]="providerForm.firstName" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Last Name *</label>
+          <input type="text" [(ngModel)]="providerForm.lastName" class="form-input" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Specialty</label>
+          <input type="text" [(ngModel)]="providerForm.specialty" class="form-input" placeholder="Cardiology" />
+        </div>
+        <div>
+          <label class="form-label">NPI</label>
+          <input type="text" [(ngModel)]="providerForm.npi" class="form-input" placeholder="1234567890" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Phone</label>
+          <input type="text" [(ngModel)]="providerForm.phone" class="form-input" />
+        </div>
+        <div>
+          <label class="form-label">Email</label>
+          <input type="email" [(ngModel)]="providerForm.email" class="form-input" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Address</label>
+        <textarea [(ngModel)]="providerForm.address" class="form-input" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="showProviderModal=false" class="btn-secondary">Cancel</button>
+      <button (click)="saveProvider()" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Insurance Modal -->
+<div *ngIf="showInsuranceModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 class="text-lg font-semibold text-gray-800">{{ editingInsurance ? 'Edit Insurance' : 'Add Insurance' }}</h3>
+      <button (click)="showInsuranceModal=false" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 space-y-4">
+      <div>
+        <label class="form-label">Name *</label>
+        <input type="text" [(ngModel)]="insuranceForm.name" class="form-input" placeholder="BlueCross BlueShield" />
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Payer ID</label>
+          <input type="text" [(ngModel)]="insuranceForm.payerId" class="form-input" placeholder="BCBS-001" />
+        </div>
+        <div>
+          <label class="form-label">Phone</label>
+          <input type="text" [(ngModel)]="insuranceForm.phone" class="form-input" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Email</label>
+        <input type="email" [(ngModel)]="insuranceForm.email" class="form-input" />
+      </div>
+      <div>
+        <label class="form-label">Address</label>
+        <textarea [(ngModel)]="insuranceForm.address" class="form-input" rows="2"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="showInsuranceModal=false" class="btn-secondary">Cancel</button>
+      <button (click)="saveInsurance()" class="btn-primary">Save</button>
+    </div>
+  </div>
+</div>

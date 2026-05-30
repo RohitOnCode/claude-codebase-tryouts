@@ -1,0 +1,77 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <p class="text-sm text-gray-500">Track billing invoices</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-6">
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="text-sm font-medium text-gray-600">Filter:</span>
+      <button (click)="statusFilter=''; loadInvoices()"
+              [class]="statusFilter === '' ? 'badge-blue px-3 py-1 rounded-full text-xs font-medium cursor-pointer' : 'bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200'">
+        All
+      </button>
+      <button *ngFor="let s of statuses"
+              (click)="statusFilter=s; loadInvoices()"
+              [class]="statusFilter === s ? 'badge-blue px-3 py-1 rounded-full text-xs font-medium cursor-pointer' : 'bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200'">
+        {{ s }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+  </div>
+
+  <div *ngIf="!loading" class="card p-0 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="table-header">Invoice #</th>
+          <th class="table-header">Patient</th>
+          <th class="table-header">Invoice Date</th>
+          <th class="table-header">Due Date</th>
+          <th class="table-header">Total</th>
+          <th class="table-header">Paid</th>
+          <th class="table-header">Balance</th>
+          <th class="table-header">Status</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <tr *ngFor="let invoice of invoices"
+            [class]="isOverdue(invoice) ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'"
+            class="transition-colors">
+          <td class="table-cell">
+            <span class="font-mono text-xs text-blue-600 font-medium">{{ invoice.invoiceNumber }}</span>
+          </td>
+          <td class="table-cell">
+            <p class="font-medium text-gray-900">
+              {{ invoice.claim?.patient?.firstName }} {{ invoice.claim?.patient?.lastName }}
+            </p>
+          </td>
+          <td class="table-cell text-gray-600">{{ invoice.invoiceDate }}</td>
+          <td class="table-cell">
+            <span [class]="isOverdue(invoice) ? 'text-red-600 font-medium' : 'text-gray-600'">
+              {{ invoice.dueDate }}
+            </span>
+          </td>
+          <td class="table-cell font-semibold text-gray-900">{{ formatCurrency(invoice.totalAmount) }}</td>
+          <td class="table-cell text-green-600 font-medium">{{ formatCurrency(invoice.paidAmount) }}</td>
+          <td class="table-cell">
+            <span [class]="getBalance(invoice) > 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold'">
+              {{ formatCurrency(getBalance(invoice)) }}
+            </span>
+          </td>
+          <td class="table-cell">
+            <span [class]="getStatusClass(invoice.status)" class="badge">{{ invoice.status }}</span>
+          </td>
+        </tr>
+        <tr *ngIf="invoices.length === 0">
+          <td colspan="8" class="px-6 py-12 text-center text-gray-400">No invoices found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
