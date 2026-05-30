@@ -1,0 +1,122 @@
+<div class="p-6">
+  <div class="flex items-center justify-between mb-6">
+    <p class="text-sm text-gray-500">Track payment transactions</p>
+    <button (click)="openModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      Record Payment
+    </button>
+  </div>
+
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+  </div>
+
+  <div *ngIf="!loading" class="card p-0 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="table-header">Transaction</th>
+          <th class="table-header">Invoice</th>
+          <th class="table-header">Patient</th>
+          <th class="table-header">Amount</th>
+          <th class="table-header">Method</th>
+          <th class="table-header">Date</th>
+          <th class="table-header">Notes</th>
+          <th class="table-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <tr *ngFor="let payment of payments" class="hover:bg-gray-50 transition-colors">
+          <td class="table-cell">
+            <span class="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+              {{ payment.transactionId || 'N/A' }}
+            </span>
+          </td>
+          <td class="table-cell">
+            <span class="font-mono text-xs text-blue-600">{{ payment.invoice?.invoiceNumber }}</span>
+          </td>
+          <td class="table-cell font-medium text-gray-900">
+            {{ payment.invoice?.claim?.patient?.firstName }} {{ payment.invoice?.claim?.patient?.lastName }}
+          </td>
+          <td class="table-cell font-bold text-green-700">{{ formatCurrency(payment.amount) }}</td>
+          <td class="table-cell">
+            <span [class]="getMethodClass(payment.paymentMethod)" class="badge">
+              {{ payment.paymentMethod?.replace('_', ' ') }}
+            </span>
+          </td>
+          <td class="table-cell text-gray-600">{{ payment.paymentDate }}</td>
+          <td class="table-cell text-gray-500 text-xs">{{ payment.notes }}</td>
+          <td class="table-cell">
+            <button (click)="deletePayment(payment.id!)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="payments.length === 0">
+          <td colspan="8" class="px-6 py-12 text-center text-gray-400">No payments recorded.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Record Payment Modal -->
+<div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 class="text-lg font-semibold text-gray-800">Record Payment</h3>
+      <button (click)="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 space-y-4">
+      <div>
+        <label class="form-label">Invoice *</label>
+        <select [(ngModel)]="form.invoice.id" class="form-input">
+          <option [value]="null">Select invoice</option>
+          <option *ngFor="let inv of invoices" [value]="inv.id">
+            {{ inv.invoiceNumber }} — {{ inv.claim?.patient?.firstName }} {{ inv.claim?.patient?.lastName }}
+          </option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Amount *</label>
+          <input type="number" [(ngModel)]="form.amount" class="form-input" placeholder="0.00" />
+        </div>
+        <div>
+          <label class="form-label">Payment Date</label>
+          <input type="date" [(ngModel)]="form.paymentDate" class="form-input" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Payment Method</label>
+          <select [(ngModel)]="form.paymentMethod" class="form-input">
+            <option *ngFor="let m of paymentMethods" [value]="m">{{ m.replace('_', ' ') }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Transaction ID</label>
+          <input type="text" [(ngModel)]="form.transactionId" class="form-input" placeholder="TXN-001" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Notes</label>
+        <textarea [(ngModel)]="form.notes" class="form-input" rows="2" placeholder="Additional notes"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="closeModal()" class="btn-secondary">Cancel</button>
+      <button (click)="savePayment()" class="btn-primary">Record Payment</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,200 @@
+<div class="p-6">
+  <div *ngIf="loading" class="flex items-center justify-center h-64">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+  </div>
+
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && stats">
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <!-- Total Patients -->
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Total Patients</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.totalPatients }}</p>
+          </div>
+          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-1">
+          <span class="text-green-600 text-sm font-medium">Active</span>
+        </div>
+      </div>
+
+      <!-- Total Claims -->
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Total Claims</p>
+            <p class="text-3xl font-bold text-gray-900 mt-1">{{ stats.totalClaims }}</p>
+          </div>
+          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center gap-4 text-xs text-gray-500">
+          <span class="text-yellow-600 font-medium">{{ stats.pendingClaims }} pending</span>
+          <span class="text-red-600 font-medium">{{ stats.deniedClaims }} denied</span>
+        </div>
+      </div>
+
+      <!-- Total Collected -->
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Total Collected</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ formatCurrency(stats.totalCollected) }}</p>
+          </div>
+          <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-green-600 text-sm font-medium">Payments received</span>
+        </div>
+      </div>
+
+      <!-- Outstanding Balance -->
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-500 font-medium">Outstanding Balance</p>
+            <p class="text-2xl font-bold text-gray-900 mt-1">{{ formatCurrency(stats.totalOutstandingBalance) }}</p>
+          </div>
+          <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="text-red-600 text-sm font-medium">{{ stats.overdueInvoices }} overdue invoices</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Second row stats -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Claims breakdown -->
+      <div class="card lg:col-span-2">
+        <h3 class="text-base font-semibold text-gray-800 mb-4">Claims Overview</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+              <span class="text-sm text-gray-600">Pending</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-yellow-400 rounded-full"
+                     [style.width.%]="stats.totalClaims ? (stats.pendingClaims / stats.totalClaims * 100) : 0"></div>
+              </div>
+              <span class="text-sm font-medium text-gray-800 w-8 text-right">{{ stats.pendingClaims }}</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              <span class="text-sm text-gray-600">Approved</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-green-500 rounded-full"
+                     [style.width.%]="stats.totalClaims ? (stats.approvedClaims / stats.totalClaims * 100) : 0"></div>
+              </div>
+              <span class="text-sm font-medium text-gray-800 w-8 text-right">{{ stats.approvedClaims }}</span>
+            </div>
+          </div>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <span class="text-sm text-gray-600">Denied</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-32 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div class="h-full bg-red-500 rounded-full"
+                     [style.width.%]="stats.totalClaims ? (stats.deniedClaims / stats.totalClaims * 100) : 0"></div>
+              </div>
+              <span class="text-sm font-medium text-gray-800 w-8 text-right">{{ stats.deniedClaims }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 pt-4 border-t border-gray-100 grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-500">Approved Value</p>
+            <p class="text-lg font-bold text-green-600">{{ formatCurrency(stats.totalApprovedAmount) }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">Pending Value</p>
+            <p class="text-lg font-bold text-yellow-600">{{ formatCurrency(stats.totalPendingAmount) }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice summary -->
+      <div class="card">
+        <h3 class="text-base font-semibold text-gray-800 mb-4">Invoice Summary</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <span class="text-sm text-gray-600">Total Invoices</span>
+            <span class="text-sm font-bold text-gray-900">{{ stats.totalInvoices }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+            <span class="text-sm text-red-600">Overdue</span>
+            <span class="text-sm font-bold text-red-700">{{ stats.overdueInvoices }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+            <span class="text-sm text-green-600">Collected</span>
+            <span class="text-sm font-bold text-green-700">{{ formatCurrency(stats.totalCollected) }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+            <span class="text-sm text-orange-600">Outstanding</span>
+            <span class="text-sm font-bold text-orange-700">{{ formatCurrency(stats.totalOutstandingBalance) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <h3 class="text-base font-semibold text-gray-800 mb-4">Quick Actions</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <a routerLink="/patients" class="flex flex-col items-center p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors cursor-pointer">
+          <svg class="w-6 h-6 text-blue-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+          </svg>
+          <span class="text-sm font-medium text-blue-700">New Patient</span>
+        </a>
+        <a routerLink="/claims" class="flex flex-col items-center p-4 bg-purple-50 hover:bg-purple-100 rounded-xl transition-colors cursor-pointer">
+          <svg class="w-6 h-6 text-purple-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span class="text-sm font-medium text-purple-700">File Claim</span>
+        </a>
+        <a routerLink="/invoices" class="flex flex-col items-center p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors cursor-pointer">
+          <svg class="w-6 h-6 text-green-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span class="text-sm font-medium text-green-700">View Invoices</span>
+        </a>
+        <a routerLink="/payments" class="flex flex-col items-center p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors cursor-pointer">
+          <svg class="w-6 h-6 text-orange-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-sm font-medium text-orange-700">Record Payment</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

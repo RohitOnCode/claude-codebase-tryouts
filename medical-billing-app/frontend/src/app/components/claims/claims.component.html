@@ -1,0 +1,182 @@
+<div class="p-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <p class="text-sm text-gray-500">Manage insurance claims</p>
+    <button (click)="openAddModal()" class="btn-primary flex items-center gap-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+      New Claim
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-6">
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="text-sm font-medium text-gray-600">Filter by status:</span>
+      <button (click)="statusFilter=''; loadClaims()"
+              [class]="statusFilter === '' ? 'badge-blue px-3 py-1 rounded-full text-xs font-medium cursor-pointer' : 'bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200'">
+        All
+      </button>
+      <button *ngFor="let s of statuses"
+              (click)="statusFilter=s; loadClaims()"
+              [class]="statusFilter === s ? 'badge-blue px-3 py-1 rounded-full text-xs font-medium cursor-pointer' : 'bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-200'">
+        {{ s }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">{{ error }}</div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!loading" class="card p-0 overflow-hidden">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="table-header">Claim ID</th>
+          <th class="table-header">Patient</th>
+          <th class="table-header">Provider</th>
+          <th class="table-header">Date of Service</th>
+          <th class="table-header">Diagnosis</th>
+          <th class="table-header">Amount</th>
+          <th class="table-header">Status</th>
+          <th class="table-header">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-100">
+        <tr *ngFor="let claim of claims" class="hover:bg-gray-50 transition-colors">
+          <td class="table-cell">
+            <span class="font-mono text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">#{{ claim.id }}</span>
+          </td>
+          <td class="table-cell">
+            <p class="font-medium text-gray-900">{{ claim.patient?.firstName }} {{ claim.patient?.lastName }}</p>
+          </td>
+          <td class="table-cell">
+            <p class="text-gray-700">{{ claim.provider?.firstName }} {{ claim.provider?.lastName }}</p>
+            <p class="text-xs text-gray-400">{{ claim.provider?.specialty }}</p>
+          </td>
+          <td class="table-cell text-gray-600">{{ claim.dateOfService }}</td>
+          <td class="table-cell">
+            <p class="font-mono text-xs text-blue-600">{{ claim.diagnosisCode }}</p>
+            <p class="text-xs text-gray-500 truncate max-w-32">{{ claim.diagnosisDescription }}</p>
+          </td>
+          <td class="table-cell font-semibold text-gray-900">{{ formatCurrency(claim.totalAmount) }}</td>
+          <td class="table-cell">
+            <select [(ngModel)]="claim.status" (change)="updateStatus(claim, claim.status!)"
+                    [class]="'text-xs font-medium border-0 bg-transparent cursor-pointer ' + getStatusClass(claim.status)">
+              <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+            </select>
+          </td>
+          <td class="table-cell">
+            <div class="flex items-center gap-2">
+              <button (click)="openEditModal(claim)" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+              <button (click)="confirmDelete(claim.id!)" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="claims.length === 0">
+          <td colspan="8" class="px-6 py-12 text-center text-gray-400">No claims found.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div *ngIf="showModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-screen overflow-y-auto">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <h3 class="text-lg font-semibold text-gray-800">{{ editingClaim ? 'Edit Claim' : 'New Claim' }}</h3>
+      <button (click)="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg text-gray-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Patient *</label>
+          <select [(ngModel)]="form.patient.id" class="form-input">
+            <option [value]="null">Select patient</option>
+            <option *ngFor="let p of patients" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Provider *</label>
+          <select [(ngModel)]="form.provider.id" class="form-input">
+            <option [value]="null">Select provider</option>
+            <option *ngFor="let p of providers" [value]="p.id">{{ p.firstName }} {{ p.lastName }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Insurance Provider</label>
+          <select [(ngModel)]="form.insuranceProvider.id" class="form-input">
+            <option [value]="null">Select insurance</option>
+            <option *ngFor="let p of insuranceProviders" [value]="p.id">{{ p.name }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Date of Service</label>
+          <input type="date" [(ngModel)]="form.dateOfService" class="form-input" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Diagnosis Code</label>
+          <input type="text" [(ngModel)]="form.diagnosisCode" class="form-input" placeholder="ICD-10 code" />
+        </div>
+        <div>
+          <label class="form-label">Total Amount</label>
+          <input type="number" [(ngModel)]="form.totalAmount" class="form-input" placeholder="0.00" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Diagnosis Description</label>
+        <input type="text" [(ngModel)]="form.diagnosisDescription" class="form-input" placeholder="Diagnosis description" />
+      </div>
+      <div>
+        <label class="form-label">Status</label>
+        <select [(ngModel)]="form.status" class="form-input">
+          <option *ngFor="let s of statuses" [value]="s">{{ s }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Notes</label>
+        <textarea [(ngModel)]="form.notes" class="form-input" rows="2" placeholder="Additional notes"></textarea>
+      </div>
+    </div>
+    <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3">
+      <button (click)="closeModal()" class="btn-secondary">Cancel</button>
+      <button (click)="saveClaim()" class="btn-primary">{{ editingClaim ? 'Update' : 'Create' }}</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm -->
+<div *ngIf="deleteConfirmId" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">Delete Claim</h3>
+    <p class="text-sm text-gray-500 mb-6">This action cannot be undone.</p>
+    <div class="flex gap-3 justify-center">
+      <button (click)="deleteConfirmId = null" class="btn-secondary">Cancel</button>
+      <button (click)="deleteClaim()" class="btn-danger">Delete</button>
+    </div>
+  </div>
+</div>
