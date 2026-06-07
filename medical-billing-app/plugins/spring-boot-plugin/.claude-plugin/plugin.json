@@ -1,0 +1,9 @@
+{
+  "name": "spring-boot-plugin",
+  "description": "Generic Spring Boot development helpers: Maven workflows, JPA entity scaffolding, REST API scaffolding, and a Spring Boot code review subagent.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Medical Billing App Team"
+  },
+  "license": "MIT"
+}
