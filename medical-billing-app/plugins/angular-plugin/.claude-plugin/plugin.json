@@ -1,0 +1,9 @@
+{
+  "name": "angular-plugin",
+  "description": "Generic Angular development helpers: Angular CLI workflows, component scaffolding, Tailwind CSS utility guidance, and an Angular code review subagent.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Medical Billing App Team"
+  },
+  "license": "MIT"
+}
